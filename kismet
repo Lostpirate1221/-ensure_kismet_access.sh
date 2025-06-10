@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Get current username
+USER_NAME=$(whoami)
+
+echo "[*] Checking if '$USER_NAME' is in the 'kismet' group..."
+
+# Check if user is in group
+if groups "$USER_NAME" | grep -qw "kismet"; then
+    echo "[+] User '$USER_NAME' is already in the 'kismet' group."
+else
+    echo "[-] User '$USER_NAME' is NOT in the 'kismet' group. Adding now..."
+
+    # Add user to the kismet group
+    sudo usermod -aG kismet "$USER_NAME"
+
+    if [ $? -eq 0 ]; then
+        echo "[+] Successfully added '$USER_NAME' to 'kismet'."
+        echo "[*] Applying group change with 'newgrp kismet'..."
+
+        # Start a new shell with the kismet group active
+        exec newgrp kismet
+    else
+        echo "[!] Failed to add user to 'kismet'. Check permissions."
+        exit 1
+    fi
+fi
+
+# Confirm it worked
+echo "[*] Confirming group membership..."
+groups "$USER_NAME" | grep --color=always -o "kismet"
